@@ -57,9 +57,15 @@ Where $R_{\text{bonus}} = 1.0 \times \left(1 - \frac{|V_{\text{err}}|}{2.0}\righ
 
 ---
 
-## 📊 Multi-Scenario Performance Verification
+## 📊 Multi-Scenario Performance Verification & Graph Scaling
 
-### 1. Multi-Scenario Dynamic Stress Testing
+### 1. Custom Visual Graph Scaling & Bounds
+To provide high visual resolution and clear distinction across regulation regimes, all output waveforms in [`plot_results.m`](file:///c:/Users/Santhosh/Documents/antigravity/friendly-carson/plot_results.m) are generated with custom-zoomed axis scales:
+- **DC Bus Voltage Scale:** Zoomed to $[290.0\,\text{V}, 310.0\,\text{V}]$ (Navy line `#0D47A1`) to highlight steady-state ripple suppression around $V^* = 300\,\text{V}$.
+- **Tracking Deviation Scale:** Bounded to $[-5.5\,\text{V}, +5.5\,\text{V}]$ (Crimson line `#B71C1C`) with a soft-emerald shaded precision target envelope ($[-0.5\,\text{V}, +0.5\,\text{V}]$).
+- **Converter Action Scale:** Bounded to $[-12.0, +12.0]$ (Forest Green line `#1B5E20`) to display actuator headroom beyond the $[-10, +10]$ saturation boundaries.
+
+### 2. Multi-Scenario Dynamic Stress Testing
 The trained continuous neural network controller is systematically evaluated across three distinct operational regimes:
 - **Scenario A:** Nominal $10\,\text{Hz}$ dynamic sinusoidal load current ripple stabilization.
 - **Scenario B:** Heavy load step transient rejection ($+10\,\text{A}$ voltage sag at $0.5\,\text{s}$, $-15\,\text{A}$ surge at $1.2\,\text{s}$).
@@ -69,7 +75,7 @@ The trained continuous neural network controller is systematically evaluated acr
 
 ---
 
-### 2. Baseline DRL vs. Historical PI Benchmark
+### 3. Baseline DRL vs. Historical PI Benchmark
 Direct trajectory comparison between the neural network agent and measured dataset:
 
 ![DRL Neural Net vs Historical PI Controller Performance](validation_results_v3.png)
