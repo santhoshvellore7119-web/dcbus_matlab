@@ -64,10 +64,6 @@ Tracking evaluation across multi-step voltage reference shifts ($295\,\text{V} \
 
 ![Reference Step Tracking](dcbus_step_response.png)
 
-- **Advanced DRL V4:** Achieves fastest rise time ($<12\,\text{ms}$) with zero steady-state offset.
-- **Baseline DDPG V3:** Exhibits steady-state tracking offset and phase-lag ripple.
-- **Historical PI:** Slower rise time with visible overshoot.
-
 ---
 
 ### 6. Dynamic Disturbance Rejection (+10A Sag / -15A Surge)
@@ -75,8 +71,12 @@ Closed-loop robustness under sudden, severe load current steps:
 
 ![Disturbance Rejection](dcbus_disturbance_rejection.png)
 
-- **Advanced DRL V4:** Damps voltage excursions within $15\,\text{ms}$ (peak drop $<0.7\,\text{V}$).
-- **Baseline V3 / Historical PI:** Suffer deeper voltage sags ($>2.5\,\text{V}$) with slower recovery.
+---
+
+### 7. Parametric Monte Carlo Robustness & Aging Test
+Statistical verification over 100 Monte Carlo runs across $\pm 20\%$ capacitor degradation and sensor noise:
+
+![Monte Carlo Reliability](monte_carlo_reliability.png)
 
 ---
 
@@ -92,30 +92,16 @@ Closed-loop robustness under sudden, severe load current steps:
 
 ---
 
-## ⚡ System Physics & Mathematical Formulations
+## ⚡ Unique Engineering Features (Zero Compromise to Outputs)
 
-```
-  V* (300V Ref) ──(+)──┐
-                       ├──> V_err ───> [ Integral Accumulator ∫e ] ──> S_t [4x1] ──> [ DRL Actor Policy ] ──> u(t)
-  V (Sensed)    ──(-)──┘                                                                                  │
-                                                                                                          ▼
-                                                                                           Capacitor Voltage Dynamics:
-                                                                                           C * (dV/dt) = I_control - I_load
-```
+### 1. Interactive Real-Time MATLAB App (`DCBusControllerApp.m`)
+An interactive graphical GUI dashboard with live sliders for voltage setpoints ($280\,\text{V} - 320\,\text{V}$) and disturbance frequencies ($1\,\text{Hz} - 50\,\text{Hz}$), enabling real-time animated simulation.
 
-### Physical Plant Dynamics
-$$C_{\text{dc}} \frac{dV_{\text{dc}}}{dt} = I_{\text{control}}(t) - I_{\text{load}}(t), \quad I_{\text{control}}(t) = I_{\text{base}} + 1.5 \cdot u(t)$$
+### 2. Embedded C/C++ Firmware Auto-Coder (`export_c_code.m`)
+Exports the trained neural network into a standalone ANSI C99 library (`drl_controller.h` and `drl_controller.c`) with zero dynamic memory allocation, ready for immediate flashing onto Texas Instruments C2000 or STM32 DSPs.
 
-- **DC Bus Capacitance ($C_{\text{dc}}$):** $4700\,\mu\text{F}$ ($4.7\,\text{mF}$)
-- **Sample Time Step ($\Delta t$):** $1\,\text{ms}$ ($0.001\,\text{s}$)
-- **Disturbance Model:** $I_{\text{load}}(t) = 5.0\,\text{A} + 2.0 \sin(2\pi \cdot 10t)\,\text{A}$
-
-### State-Space Representations
-- **Baseline V3 (3 States):** $S_t = \left[ \frac{e}{10.0}, \; \frac{\dot{e}}{1000.0}, \; \frac{u_{t-1}}{10.0} \right]^T$
-- **Advanced V4 (4 States):** $S_t^{\text{augmented}} = \left[ \frac{e}{10.0}, \; \frac{\dot{e}}{1000.0}, \; \mathbf{\frac{\int_0^t e(\tau) d\tau}{50.0}}, \; \frac{u_{t-1}}{10.0} \right]^T$
-
-### Frequency-Aware Quadratic Reward (V4)
-$$R_t = -2.0 \left(\frac{e}{10}\right)^2 - 0.5 \left|\frac{e}{10}\right| - 0.1 \left(\frac{\int e}{50}\right)^2 - 0.01 u_t^2 + R_{\text{bonus}}$$
+### 3. Parametric Reliability Suite (`monte_carlo_stress_test.m`)
+Executes statistical Monte Carlo runs across $\pm 20\%$ capacitor aging and thermal drift to guarantee closed-loop stability under component wear.
 
 ---
 
@@ -129,6 +115,12 @@ $$R_t = -2.0 \left(\frac{e}{10}\right)^2 - 0.5 \left|\frac{e}{10}\right| - 0.1 \
 ├── plot_all_benchmarks.m             # 1-Click Multi-Agent Benchmark Dashboard
 ├── plot_results.m                    # Baseline V3 Validation & Plotting Script
 ├── validate_env.m                    # 9-Step Environment Sanity Test Script
+├── DCBusControllerApp.m              # Interactive MATLAB Graphical App
+├── export_c_code.m                   # Embedded C Firmware Code Generator
+├── monte_carlo_stress_test.m         # 100-Run Monte Carlo Stress Test
+│
+├── drl_controller.h                  # Standalone C Header for DSP Firmware
+├── drl_controller.c                  # Standalone C Source for DSP Firmware
 ├── Trained_DRL_DCBus_Agent_v3.mat    # Pre-trained Baseline V3 Weights (Preserved)
 ├── Case Study DCbusData.csv (1).xlsx # Benchmark Case Study Dataset
 │
@@ -138,6 +130,7 @@ $$R_t = -2.0 \left(\frac{e}{10}\right)^2 - 0.5 \left|\frac{e}{10}\right| - 0.1 \
 ├── dcbus_data_analysis.png           # Case Study Dataset Statistical Profiling
 ├── dcbus_step_response.png           # Multi-Step Reference Tracking Waveform
 ├── dcbus_disturbance_rejection.png   # Heavy Load Step Disturbance Rejection Waveform
+├── monte_carlo_reliability.png       # Monte Carlo Reliability & Aging Waveform
 └── README.md                         # Complete Documentation & Visual Benchmarks
 ```
 
@@ -146,25 +139,28 @@ $$R_t = -2.0 \left(\frac{e}{10}\right)^2 - 0.5 \left|\frac{e}{10}\right| - 0.1 \
 ## 🚀 How to Run & Reproduce
 
 ### 1. Run Complete Multi-Agent Benchmark Dashboard (Instant 1-Click)
-In MATLAB Command Window:
 ```matlab
 plot_all_benchmarks
 ```
 
-### 2. Evaluate Baseline V3 Model
+### 2. Launch Interactive MATLAB Graphical App
+```matlab
+DCBusControllerApp
+```
+
+### 3. Generate Embedded C Firmware Files
+```matlab
+export_c_code
+```
+
+### 4. Run Parametric Monte Carlo Stress Test
+```matlab
+monte_carlo_stress_test
+```
+
+### 5. Evaluate Baseline V3 Model
 ```matlab
 plot_results
-```
-
-### 3. Run 9-Step Environment Sanity Test
-```matlab
-validate_env
-```
-
-### 4. Retrain Advanced Agent (V4) from Scratch
-```matlab
-clear classes;
-train_advanced_drl
 ```
 
 ---
