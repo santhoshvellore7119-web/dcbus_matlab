@@ -271,10 +271,12 @@ function [metricsTable, simResults] = Compare_Controllers(gains_RL, excelFile, d
         legend('Location', 'southeast');
 
         subplot(3, 1, 3);
+        fill([t3(1) t3(end) t3(end) t3(1)], [0.5 0.5 -0.5 -0.5], [0.85 0.95 0.85], 'FaceAlpha', 0.4, 'EdgeColor', [0.3 0.7 0.3], 'LineStyle', ':', 'DisplayName', '\pm0.5V Target Band');
+        hold on;
         for c = 1:numCtrl
             plot(t3, res_replay{c}.e, 'Color', colors{c}, 'LineStyle', lineStyles{c}, 'LineWidth', lineWidths(c), 'DisplayName', controllers{c, 1});
-            hold on;
         end
+        yline(0, 'k--', 'LineWidth', 1.0);
         grid on; xlabel('Time (s)'); ylabel('Error e(t) (V)'); title('Tracking Error Comparison (Ripple & Deviations)');
         legend('Location', 'northeast');
 

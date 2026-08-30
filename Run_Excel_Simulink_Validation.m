@@ -210,37 +210,41 @@ function [simResultsTable, metricsTable] = Run_Excel_Simulink_Validation(excelIn
     fprintf('  [OK] Successfully generated Excel output: %s\n', excelOutput);
 
     %% 9. Generate and Save Visual Verification Figure
-    f = figure('Name', 'Simulink vs Excel Data Verification', 'Position', [100 100 1050 750], 'Visible', 'off');
+    f = figure('Name', 'Simulink vs Excel Data Verification', 'Position', [100 100 1100 800], 'Visible', 'off', 'Color', [1 1 1]);
     
     % Subplot 1: DC Bus Voltage Tracking
     subplot(3, 1, 1);
-    plot(t_sim, vSensed_excel, 'Color', [0.7 0.7 0.7], 'LineWidth', 1.0, 'DisplayName', 'Original Measured V_{dc} (Excel)');
+    plot(t_sim, vSensed_excel, 'Color', [0.65 0.65 0.65], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Original Measured V_{dc} (Excel)');
     hold on;
     plot(t_sim, vDc_sim_base, 'Color', '#D95319', 'LineStyle', '--', 'LineWidth', 1.5, 'DisplayName', sprintf('Simulink Baseline PI (Kp=%.3f, Ki=%.3f)', Kp_Base, Ki_Base));
-    plot(t_sim, vDc_sim_td3, 'Color', '#2E7D32', 'LineStyle', '-', 'LineWidth', 1.8, 'DisplayName', sprintf('Simulink TD3 RL PI (Kp=%.3f, Ki=%.3f)', Kp_TD3, Ki_TD3));
-    yline(300, 'k--', 'V_{ref} = 300V', 'LineWidth', 1.2);
+    plot(t_sim, vDc_sim_td3, 'Color', '#1B5E20', 'LineStyle', '-', 'LineWidth', 1.8, 'DisplayName', sprintf('Simulink TD3 RL PI (Kp=%.3f, Ki=%.3f)', Kp_TD3, Ki_TD3));
+    yline(300, 'r--', 'V_{ref} = 300V', 'LineWidth', 1.5);
     grid on; ylabel('Bus Voltage V_{dc} (V)'); ylim([295 305]);
-    title('Simulink Voltage Regulation under Real Case Study Disturbance');
+    title('DC-Bus Voltage Tracking & Regulation under Real Case Study Disturbance', 'FontWeight', 'bold');
     legend('Location', 'southeast');
 
-    % Subplot 2: Voltage Error Comparison
+    % Subplot 2: Voltage Error Comparison with ±0.5V Tolerance Band
     subplot(3, 1, 2);
-    plot(t_sim, e_excel, 'Color', [0.7 0.7 0.7], 'LineWidth', 1.0, 'DisplayName', 'Original Error (Excel)');
+    fill([t_sim(1) t_sim(end) t_sim(end) t_sim(1)], [0.5 0.5 -0.5 -0.5], [0.85 0.95 0.85], 'FaceAlpha', 0.4, 'EdgeColor', [0.3 0.7 0.3], 'LineStyle', ':', 'DisplayName', '\pm0.5V Target Band');
     hold on;
+    plot(t_sim, e_excel, 'Color', [0.65 0.65 0.65], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Original Error (Excel)');
     plot(t_sim, e_sim_base, 'Color', '#D95319', 'LineStyle', '--', 'LineWidth', 1.5, 'DisplayName', 'Simulink Baseline Error');
-    plot(t_sim, e_sim_td3, 'Color', '#2E7D32', 'LineStyle', '-', 'LineWidth', 1.8, 'DisplayName', 'Simulink TD3 RL Error');
-    grid on; ylabel('Tracking Error e(t) (V)'); ylim([-5 5]);
-    title('Voltage Tracking Error e(t) = V_{ref} - V_{dc}');
+    plot(t_sim, e_sim_td3, 'Color', '#1B5E20', 'LineStyle', '-', 'LineWidth', 1.8, 'DisplayName', 'Simulink TD3 RL Error');
+    yline(0, 'k--', 'LineWidth', 1.0);
+    grid on; ylabel('Tracking Error e(t) (V)'); ylim([-4 4]);
+    title('Voltage Tracking Error e(t) = V_{ref} - V_{dc} (Goal: Minimize)', 'FontWeight', 'bold');
     legend('Location', 'northeast');
 
     % Subplot 3: Controller Output Comparison
     subplot(3, 1, 3);
-    plot(t_sim, u_excel, 'Color', [0.7 0.7 0.7], 'LineWidth', 1.0, 'DisplayName', 'Original PI Action (Excel)');
+    plot(t_sim, u_excel, 'Color', [0.65 0.65 0.65], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Original PI Action (Excel)');
     hold on;
     plot(t_sim, u_sim_base, 'Color', '#D95319', 'LineStyle', '--', 'LineWidth', 1.5, 'DisplayName', 'Simulink Baseline u(t)');
-    plot(t_sim, u_sim_td3, 'Color', '#2E7D32', 'LineStyle', '-', 'LineWidth', 1.8, 'DisplayName', 'Simulink TD3 RL u(t)');
-    grid on; xlabel('Time (s)'); ylabel('Control Action u(t)'); ylim([-10 10]);
-    title('Commanded Converter Control Action u(t)');
+    plot(t_sim, u_sim_td3, 'Color', '#1B5E20', 'LineStyle', '-', 'LineWidth', 1.8, 'DisplayName', 'Simulink TD3 RL u(t)');
+    yline(10, 'k:', 'u_{max}', 'LineWidth', 1.0);
+    yline(-10, 'k:', 'u_{min}', 'LineWidth', 1.0);
+    grid on; xlabel('Time (seconds)'); ylabel('Control Action u(t)'); ylim([-10.5 10.5]);
+    title('Commanded Converter Control Action u(t) (Bounded & Smooth)', 'FontWeight', 'bold');
     legend('Location', 'southeast');
 
     saveas(f, 'dcbus_simulink_vs_excel.png');
