@@ -12,7 +12,17 @@ function [dcBusData, plantParams, distProfile] = Load_DCBus_Data(excelFile, doPl
     end
 
     if ~isfile(excelFile)
-        error('Excel data file "%s" was not found in the current directory.', excelFile);
+        % Attempt automatic discovery if file with slightly different name is present
+        potentialFiles = dir('*DCbusData*.xlsx');
+        if isempty(potentialFiles)
+            potentialFiles = dir('*.xlsx');
+        end
+        if ~isempty(potentialFiles)
+            excelFile = potentialFiles(1).name;
+            fprintf('  Auto-detected data file: %s\n', excelFile);
+        else
+            error('Excel data file "%s" was not found in the current directory.', excelFile);
+        end
     end
 
     fprintf('=====================================================\n');

@@ -44,22 +44,22 @@ function [metricsTable, simResults] = main(mode, numEpisodes)
     fprintf('=========================================================================\n\n');
 
     %% STEP 1: Load and Profile Case Study Data
-    fprintf('[STEP 1/5] Ingesting and Profiling Case Study Dataset...\n');
+    fprintf('[STEP 1/6] Ingesting and Profiling Case Study Dataset...\n');
     [dcBusData, plantParams, distProfile] = Load_DCBus_Data(excelFile, true);
 
     %% STEP 2: Programmatically Construct Simulink Models
-    fprintf('[STEP 2/5] Programmatically Constructing Simulink Models...\n');
+    fprintf('[STEP 2/6] Programmatically Constructing Simulink Models...\n');
     Build_DCBus_Models(plantParams);
 
     %% STEP 3: Model Diagnostics & Wiring Verification
-    fprintf('[STEP 3/5] Verifying Model Architecture & Port Connectivity...\n');
+    fprintf('[STEP 3/6] Verifying Model Architecture & Port Connectivity...\n');
     modelsValid = Check_Model_Wiring({'dcBusPITuning', 'dcBusPITuningRL'});
     if ~modelsValid
         error('Simulink model diagnostics failed. Please inspect model configuration.');
     end
 
     %% STEP 4: Train / Load TD3 Reinforcement Learning Agent
-    fprintf('[STEP 4/5] Executing TD3 RL Tuning Pipeline...\n');
+    fprintf('[STEP 4/6] Executing TD3 RL Tuning Pipeline...\n');
     if mode == 2 || ~isfile(agentFile)
         doTrain = true;
     else
