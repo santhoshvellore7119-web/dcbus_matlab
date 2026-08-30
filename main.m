@@ -16,6 +16,7 @@
 %   main(1)              % Mode 1: Fast evaluation (loads pre-trained agents)
 %   main(2, 100)         % Mode 2: Retrain TD3 PI Agent (100 episodes)
 %   main(3, 500)         % Mode 3: Retrain DDPG Neural Network Agent (500 episodes)
+%   main(4)              % Mode 4: Run 9-Step DRL Environment Validation Suite
 
 function [metricsTable, simResults] = main(mode, numEpisodes)
     clc;
@@ -30,6 +31,16 @@ function [metricsTable, simResults] = main(mode, numEpisodes)
     end
     if nargin < 2 || isempty(numEpisodes)
         numEpisodes = 50;
+    end
+
+    if mode == 4
+        fprintf('=========================================================================\n');
+        fprintf('   RUNNING 9-STEP DRL ENVIRONMENT VALIDATION SUITE\n');
+        fprintf('=========================================================================\n\n');
+        run validate_env;
+        metricsTable = [];
+        simResults = [];
+        return;
     end
 
     fprintf('=========================================================================\n');
@@ -109,6 +120,8 @@ function str = localGetModeName(m)
             str = 'Mode 2 (Retrain TD3 PI Agent & Benchmark)';
         case 3
             str = 'Mode 3 (Retrain DDPG Neural Network Agent & Benchmark)';
+        case 4
+            str = 'Mode 4 (Run 9-Step DRL Environment Validation Suite)';
         otherwise
             str = 'Mode 1 (Default)';
     end
