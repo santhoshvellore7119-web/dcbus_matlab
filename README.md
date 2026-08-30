@@ -1,24 +1,24 @@
 # DC-Bus Voltage Regulation & PI Tuning via Deep Reinforcement Learning
 
-A comprehensive MATLAB/Simulink engineering framework for modeling, training, benchmarking, and validating DC-bus voltage controllers under real-world dynamic disturbances from Case Study DCbusData.csv (1).xlsx.
+A comprehensive, production-grade MATLAB & Simulink engineering framework for modeling, training, benchmarking, and validating DC-bus voltage controllers under real-world dynamic disturbances from `Case Study DCbusData.csv (1).xlsx`.
 
-This project unites and evaluates **two distinct Reinforcement Learning control paradigms**:
-1. **TD3 Optimal PI Controller Tuning (Linear Actor Formulation)**: Directly optimizes physical gains (, K_i$) with twin Q-critics for zero-runtime-overhead deployment on microcontrollers/DSPs.
-2. **DDPG Continuous Neural Network Controller (Black-Box Nonlinear Actor)**: Deep 2-layer MLP continuous policy ( \to 128 \to 128 \to 1$) for nonlinear voltage regulation.
+This project unites and validates **two distinct Reinforcement Learning control paradigms**:
+1. **TD3 Optimal PI Controller Tuning (Linear Actor Formulation)**: Directly optimizes physical gains ($K_p, K_i$) with twin Q-critics for zero-runtime-overhead deployment on microcontrollers/DSPs.
+2. **DDPG Continuous Neural Network Controller (Black-Box Nonlinear Actor)**: Deep 2-layer MLP continuous policy ($3 \to 128 \to 128 \to 1$) for nonlinear voltage regulation.
 
 ---
 
-## 📌 Key Architectural Comparison
+## 📌 Architectural Comparison: Linear Actor vs. Deep Neural Net Actor
 
 | Feature / Metric | **TD3 PI-as-Linear-Actor** | **DDPG Neural Network Actor** |
 | :--- | :--- | :--- |
-| **Policy Formulation** | (t) = K_i \int e \, dt + K_p e(t)$ | (t) = \text{Tanh}(\mathbf{W}_3 \text{ReLU}(\mathbf{W}_2 \dots))$ |
+| **Policy Formulation** | $u(t) = K_i \int e \, dt + K_p e(t)$ | $u(t) = \text{Tanh}(\mathbf{W}_3 \text{ReLU}(\mathbf{W}_2 \dots))$ |
 | **Algorithm** | Twin Delayed DDPG (TD3) | Deep Deterministic Policy Gradient (DDPG) |
-| **Gains / Output** |  = 0.09170,\; K_i = 0.66378$ |  \times 128$ Weight Matrices |
-| **Deployment Target** | Standard DSP / Microcontroller Registers | Deep Learning Runtime Engine |
-| **Simulink Integration** | Native Simulink Models (.slx) | MATLAB Custom Environment (DCBusEnv.m) |
-| **Dataset Grounding** | Continuous ,001$-point Replay | Ingestion & Baseline Overlay |
-| **Excel Export** | DCbusData_Simulink_Output.xlsx | Direct Telemetry Analysis |
+| **Extracted Gains** | $K_p = 0.09170,\; K_i = 0.66378$ | $128 \times 128$ Neural Network Weights |
+| **Deployment Target** | Standard DSP / Microcontroller Registers | Embedded Deep Learning Engine |
+| **Simulink Integration** | Native Simulink Models (`.slx`) | MATLAB Custom Environment (`DCBusEnv.m`) |
+| **Dataset Grounding** | Continuous $120,001$-point Replay | Ingestion & Baseline Telemetry Overlay |
+| **Excel Export** | `DCbusData_Simulink_Output.xlsx` | Direct Telemetry Validation |
 
 ---
 
@@ -29,7 +29,7 @@ Direct trajectory comparison between the measured Excel data, baseline legacy PI
 
 ![Simulink vs Excel Verification](dcbus_simulink_vs_excel.png)
 
-- **DC Bus Voltage (Top):** TD3-PI dampens dynamic dips and holds {\text{ref}} = 300\,\text{V}$.
+- **DC Bus Voltage (Top):** TD3-PI dampens dynamic dips and holds $V_{\text{ref}} = 300\,\text{V}$.
 - **Tracking Error & $\pm 0.5\,\text{V}$ Target Band (Middle):** Error stays strictly within the green tolerance band.
 - **Control Action (Bottom):** Bounded and smooth control signals within $[-10, +10]$.
 
@@ -48,30 +48,46 @@ Continuous DDPG Neural Network agent performance over the evaluation horizon:
 
 | Performance Metric | Original Excel Data | Simulink Baseline PI | Simulink TD3 RL PI | DDPG Neural Net |
 | :--- | :---: | :---: | :---: | :---: |
-| **Voltage Std Deviation ($\\sigma_{Vdc}$)** | .5425\,\text{V}$ | .3130\,\text{V}$ | $\mathbf{1.3023\,\text{V}}$ | .8210\,\text{V}$ |
-| **Voltage RMS Ripple** | .8882\,\text{V}$ | .3266\,\text{V}$ | $\mathbf{1.3177\,\text{V}}$ | .8450\,\text{V}$ |
-| **Integrated Absolute Error (IAE)** | .5577$ | .6260$ | $\mathbf{11.5640}$ | .1200$ |
-| **Peak Voltage Error** | .9000\,\text{V}$ | .9635\,\text{V}$ | $\mathbf{2.9330\,\text{V}}$ | .3500\,\text{V}$ |
-| **Mean Control Effort $|u|$** | .8721$ | .0740$ | $\mathbf{2.0780}$ | .5600$ |
+| **Voltage Std Deviation ($\sigma_{Vdc}$)** | $0.5425\,\text{V}$ | $1.3130\,\text{V}$ | $\mathbf{1.3023\,\text{V}}$ | $1.8210\,\text{V}$ |
+| **Voltage RMS Ripple** | $0.8882\,\text{V}$ | $1.3266\,\text{V}$ | $\mathbf{1.3177\,\text{V}}$ | $1.8450\,\text{V}$ |
+| **Integrated Absolute Error (IAE)** | $7.5577$ | $11.6260$ | $\mathbf{11.5640}$ | $14.1200$ |
+| **Peak Voltage Error** | $2.9000\,\text{V}$ | $2.9635\,\text{V}$ | $\mathbf{2.9330\,\text{V}}$ | $6.3500\,\text{V}$ |
+| **Mean Control Effort $|u|$** | $3.8721$ | $2.0740$ | $\mathbf{2.0780}$ | $0.5600$ |
+
+---
+
+## 🤝 Validation & Relationship to Prior Work
+
+This repository directly integrates and validates the continuous DRL voltage regulation methodology from prior research while resolving critical engineering limitations:
+
+1. **Exact 1:1 Coincidence with DRL Architecture**:
+   - **Environment Physics & Scaling**: Implements identical bus capacitance ($C = 4.7\,\text{mF}$), nominal reference ($V_{\text{ref}} = 300\,\text{V}$), normalized state observations ($s_t = [e/10, \dot{e}/1000, u_{t-1}/10]$), and continuous reward formulation.
+   - **DDPG Neural Network**: Fully retains the $3 \to 128 \to 128 \to 1$ continuous policy network and pre-trained weights (`Trained_DRL_DCBus_Agent_v3.mat`).
+   - **9-Step Validation Suite**: Incorporates the full sanity test suite (`validate_env.m`).
+2. **Key Bug Fixes & Enhancements**:
+   - **Zero Hardcoded Paths**: Removed all absolute local user directory paths (e.g. `C:\Users\Rakesh T\...`) to guarantee 100% cross-platform portability.
+   - **Real Case Study Replay Mode**: Extended `DCBusEnv.m` so the agent can be evaluated not only under synthetic sinusoidal waves ($5 + 2\sin(20\pi t)$) but also under the **actual measured load disturbance profile** from the 120,001-sample dataset.
+   - **Simulink Hardware-Ready PI Tuning**: Added the TD3 Linear Actor approach to produce extractable gains ($K_p = 0.09170, K_i = 0.66378$) that eliminate neural network inference latency on production DSPs.
+   - **Automated Spreadsheet Export**: Outputs full time-series trajectories to `DCbusData_Simulink_Output.xlsx`.
 
 ---
 
 ## ⚙️ Dataset Grounding & Parameter Identification
 
-From Case Study DCbusData.csv (1).xlsx (,001$ samples @  = 1\,\text{ms}$, \,\text{s}$ continuous duration):
+From `Case Study DCbusData.csv (1).xlsx` ($120,001$ samples @ $T_s = 1\,\text{ms}$, $120\,\text{s}$ continuous duration):
 
 ![Case Study Data Analysis](dcbus_data_analysis.png)
 
-- **Nominal Setpoint ({\text{ref}}$):** .0\,\text{V}$
-- **Identified Legacy PI Parameters:**  = 0.07557,\; K_i = 0.64811$ (least-squares velocity form regression)
-- **Extracted Plant Constants:** Converter Gain {\text{conv}} = 8.0$, Capacitance {\text{eq}} = 40.0$,  = 1\,\text{ms}$
-- **Continuous Disturbance Model:** {\text{load}}(t) = K_{\text{conv}} u(t) - C_{\text{eq}} \frac{dV_{\text{dc}}}{dt}$
+- **Nominal Setpoint ($V_{\text{ref}}$):** $300.0\,\text{V}$
+- **Identified Legacy PI Parameters:** $K_p = 0.07557,\; K_i = 0.64811$ (least-squares velocity form regression)
+- **Extracted Plant Constants:** Converter Gain $K_{\text{conv}} = 8.0$, Capacitance $C_{\text{eq}} = 40.0$, $T_s = 1\,\text{ms}$
+- **Continuous Disturbance Model:** $I_{\text{load}}(t) = K_{\text{conv}} u(t) - C_{\text{eq}} \frac{dV_{\text{dc}}}{dt}$
 
 ---
 
 ## 📈 Multi-Scenario Dynamic Stress Testing
 
-### Scenario 1: Reference Step Tracking (\,\text{V} \to 300\,\text{V} \to 305\,\text{V} \to 298\,\text{V}$)
+### Scenario 1: Reference Step Tracking ($295\,\text{V} \to 300\,\text{V} \to 305\,\text{V} \to 298\,\text{V}$)
 ![Reference Step Tracking](dcbus_step_response.png)
 
 ### Scenario 2: Heavy Load Step Disturbance Rejection ($+10\,\text{A}, -15\,\text{A}$)
@@ -84,7 +100,7 @@ From Case Study DCbusData.csv (1).xlsx (,001$ samples @  = 1\,\text{ms}$, \,\tex
 
 ## 📂 Repository Structure
 
-`
+```
 ├── Case Study DCbusData.csv (1).xlsx    # 120,001-point Case study dataset
 ├── DCbusData_Simulink_Output.xlsx       # Output Excel file with full Simulink results
 │
@@ -116,48 +132,48 @@ From Case Study DCbusData.csv (1).xlsx (,001$ samples @  = 1\,\text{ms}$, \,\tex
 ├── dcbus_step_response.png              # Scenario 1 step response plot
 ├── dcbus_disturbance_rejection.png      # Scenario 2 disturbance rejection plot
 └── dcbus_data_replay.png                # Scenario 3 disturbance replay plot
-`
+```
 
 ---
 
 ## 🚀 How to Run
 
 ### 1. One-Click Unified Execution (Recommended)
-`matlab
+```matlab
 main
-`
+```
 or
-`matlab
+```matlab
 run_project
-`
+```
 
 ### 2. Execution Modes
 - **Mode 1 (Fast Evaluation & Benchmark - Instant)**:
-  `matlab
+  ```matlab
   main(1)
-  `
+  ```
 - **Mode 2 (Retrain TD3 PI Agent from Scratch)**:
-  `matlab
+  ```matlab
   main(2, 100)   % Retrains TD3 agent for 100 episodes
-  `
+  ```
 - **Mode 3 (Retrain DDPG Neural Network Agent from Scratch)**:
-  `matlab
+  ```matlab
   main(3, 500)   % Retrains DDPG agent for 500 episodes
-  `
+  ```
 
 ### 3. Individual Script Execution
 - **Run DRL Neural Network Sanity Check:**
-  `matlab
+  ```matlab
   validate_env
-  `
+  ```
 - **Plot DRL Neural Network Results:**
-  `matlab
+  ```matlab
   plot_results
-  `
+  ```
 - **Run Simulink Excel Validation Pipeline:**
-  `matlab
+  ```matlab
   Run_Excel_Simulink_Validation
-  `
+  ```
 
 ---
 
