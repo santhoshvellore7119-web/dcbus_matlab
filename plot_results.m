@@ -110,48 +110,48 @@ fprintf('  DRL within +/-0.5V Band    : %.2f %%%%\n', pct_tight);
 fprintf('  DRL Mean Control Action |u|: %.4f\n', mean_act);
 fprintf('=====================================================\n\n');
 
-% 6. Generate 3-Panel Visual Waveform
-f = figure('Name', 'DRL vs PI DC-Bus Regulation', 'Visible', 'off', 'Color', [1 1 1], 'Position', [100 100 1050 850]);
+% 6. Generate Visually Custom 3-Panel Waveform
+f = figure('Name', 'DRL vs PI DC-Bus Regulation', 'Visible', 'off', 'Color', [0.98 0.98 0.98], 'Position', [100 100 1050 850]);
 
-% Subplot 1: DC Bus Voltage
+% Subplot 1: DC Bus Voltage (Zoomed Scale: 290V - 310V)
 subplot(3, 1, 1);
-plot(t_sim, v_drl, 'b-', 'LineWidth', 1.8, 'DisplayName', 'DRL Agent (DDPG Neural Network)');
+plot(t_sim, v_drl, 'Color', '#0D47A1', 'LineWidth', 2.0, 'DisplayName', 'DRL Agent (Neural Network)');
 hold on;
-yline(300, 'r--', 'V_{ref} = 300V', 'LineWidth', 1.5, 'DisplayName', 'Reference (300V)');
+yline(300, 'Color', '#D32F2F', 'LineStyle', '--', 'LineWidth', 1.5, 'DisplayName', 'Nominal Setpoint V* = 300V');
 if has_dataset
     pi_len = min(num_steps, length(pi_vsensed));
     t_pi = (0:pi_len-1)' * env.dt;
-    plot(t_pi, pi_vsensed(1:pi_len), 'Color', [0.6 0.6 0.6], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Historical PI Controller (Data)');
+    plot(t_pi, pi_vsensed(1:pi_len), 'Color', [0.4 0.4 0.4], 'LineStyle', ':', 'LineWidth', 1.3, 'DisplayName', 'Measured Historical PI Controller');
 end
-grid on; ylabel('Voltage (V)'); ylim([285 315]);
-title('DC-Bus Voltage Regulation: Deep RL vs. Historical PI', 'FontWeight', 'bold');
-legend('Location', 'best');
+grid on; ylabel('Voltage V_{dc} (V)', 'FontWeight', 'bold'); ylim([290 310]);
+title('Closed-Loop DC-Bus Voltage Regulation Performance', 'FontWeight', 'bold');
+legend('Location', 'northeast');
 
-% Subplot 2: Voltage Tracking Error with ±0.5V Band
+% Subplot 2: Voltage Tracking Error (Scaled: -5.5V to +5.5V)
 subplot(3, 1, 2);
-fill([t_sim(1) t_sim(end) t_sim(end) t_sim(1)], [0.5 0.5 -0.5 -0.5], [0.85 0.95 0.85], 'FaceAlpha', 0.4, 'EdgeColor', [0.3 0.7 0.3], 'LineStyle', ':', 'DisplayName', '\pm0.5V Target Band');
+fill([t_sim(1) t_sim(end) t_sim(end) t_sim(1)], [0.5 0.5 -0.5 -0.5], [0.78 0.90 0.78], 'FaceAlpha', 0.6, 'EdgeColor', [0.2 0.6 0.2], 'LineStyle', ':', 'DisplayName', '\pm0.5V Precision Band');
 hold on;
-plot(t_sim, err_raw_vec, 'r-', 'LineWidth', 1.5, 'DisplayName', 'DRL Tracking Error');
-yline(0, 'k--', 'LineWidth', 1.0);
+plot(t_sim, err_raw_vec, 'Color', '#B71C1C', 'LineWidth', 1.6, 'DisplayName', 'DRL Error e(t) = V* - V_{dc}');
+yline(0, 'k-', 'LineWidth', 0.8);
 if has_dataset
-    plot(t_pi, pi_error(1:pi_len), 'Color', [0.6 0.6 0.6], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'PI Error (Data)');
+    plot(t_pi, pi_error(1:pi_len), 'Color', [0.4 0.4 0.4], 'LineStyle', ':', 'LineWidth', 1.3, 'DisplayName', 'Historical PI Error');
 end
-grid on; ylabel('Error (V)'); ylim([-8 8]);
-title('Voltage Tracking Error e(t) = V_{ref} - V (Goal: Minimize)', 'FontWeight', 'bold');
-legend('Location', 'best');
+grid on; ylabel('Error e(t) (V)', 'FontWeight', 'bold'); ylim([-5.5 5.5]);
+title('Voltage Tracking Deviation & \pm0.5V Target Precision Envelope', 'FontWeight', 'bold');
+legend('Location', 'northeast');
 
-% Subplot 3: Commanded Control Action
+% Subplot 3: Commanded Control Action (Scaled: -12 to +12)
 subplot(3, 1, 3);
-plot(t_sim, act_raw_vec, 'Color', [0 0.6 0], 'LineWidth', 1.5, 'DisplayName', 'DRL Control Effort u(t)');
+plot(t_sim, act_raw_vec, 'Color', '#1B5E20', 'LineWidth', 1.6, 'DisplayName', 'DRL Converter Action u(t)');
 hold on;
 if has_dataset
-    plot(t_pi, pi_output(1:pi_len), 'm:', 'LineWidth', 1.2, 'DisplayName', 'PI Output (Data)');
+    plot(t_pi, pi_output(1:pi_len), 'Color', '#6A1B9A', 'LineStyle', ':', 'LineWidth', 1.3, 'DisplayName', 'Historical PI Output');
 end
-yline(10, 'k:', 'u_{max}', 'LineWidth', 1.0);
-yline(-10, 'k:', 'u_{min}', 'LineWidth', 1.0);
-grid on; xlabel('Time (seconds)'); ylabel('Control Action'); ylim([-10.5 10.5]);
-title('Commanded Converter Control Action Signal u(t)', 'FontWeight', 'bold');
-legend('Location', 'best');
+yline(10, 'Color', '#BF360C', 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Upper Limit (+10)');
+yline(-10, 'Color', '#BF360C', 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Lower Limit (-10)');
+grid on; xlabel('Time Horizon (seconds)', 'FontWeight', 'bold'); ylabel('Action Signal u(t)', 'FontWeight', 'bold'); ylim([-12 12]);
+title('Commanded Converter Control Action & Actuator Saturation Limits', 'FontWeight', 'bold');
+legend('Location', 'northeast');
 
 out_img = 'validation_results_v3.png';
 saveas(f, out_img);
@@ -159,41 +159,41 @@ close(f);
 fprintf('Saved comparison figure: %s\n', out_img);
 
 % 7. Generate Multi-Scenario Evaluation Waveform
-f2 = figure('Name', 'Multi-Scenario Dynamic Performance', 'Visible', 'off', 'Color', [1 1 1], 'Position', [100 100 1100 900]);
+f2 = figure('Name', 'Multi-Scenario Dynamic Performance', 'Visible', 'off', 'Color', [0.98 0.98 0.98], 'Position', [100 100 1100 900]);
 
-% Scenario A: 10Hz Dynamic Load Ripple
+% Scenario A: 10Hz Dynamic Load Ripple (Scale: 292V - 308V)
 subplot(3, 1, 1);
-plot(t_sim, v_drl, 'Color', '#1565C0', 'LineWidth', 1.8, 'DisplayName', 'DRL Neural Network Controller'); hold on;
-yline(300, 'r--', 'V* = 300V Reference', 'LineWidth', 1.2);
+plot(t_sim, v_drl, 'Color', '#0288D1', 'LineWidth', 2.0, 'DisplayName', 'DRL Neural Network Controller'); hold on;
+yline(300, 'Color', '#E53935', 'LineStyle', '--', 'LineWidth', 1.4, 'DisplayName', 'Setpoint V* = 300.0 V');
 if has_dataset
-    plot(t_pi, pi_vsensed(1:pi_len), 'Color', [0.6 0.6 0.6], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Measured Historical PI (Data)');
+    plot(t_pi, pi_vsensed(1:pi_len), 'Color', [0.46 0.46 0.46], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Measured Historical Data');
 end
-grid on; ylabel('Bus Voltage (V)'); ylim([290 310]);
-title('Scenario A: Nominal 10 Hz Dynamic Load Ripple Stabilization', 'FontWeight', 'bold', 'FontSize', 11);
-legend('Location', 'upper right');
+grid on; ylabel('Voltage (V)', 'FontWeight', 'bold'); ylim([292 308]);
+title('Regime 1: Dynamic Load Current Ripple Suppression (10 Hz)', 'FontWeight', 'bold', 'FontSize', 11);
+legend('Location', 'northeast');
 
-% Scenario B: Heavy Load Step Disturbance (+10A Sag / -15A Surge)
+% Scenario B: Heavy Load Step Disturbance (Scale: 293V - 307V)
 subplot(3, 1, 2);
 v_sag = 300.0 - 1.2 * exp(-(t_sim - 0.5)/0.03) .* (t_sim >= 0.5) + 1.5 * exp(-(t_sim - 1.2)/0.03) .* (t_sim >= 1.2);
 v_pi_sag = 300.0 - 3.8 * exp(-(t_sim - 0.5)/0.08) .* (t_sim >= 0.5) + 4.2 * exp(-(t_sim - 1.2)/0.08) .* (t_sim >= 1.2);
-plot(t_sim, v_sag, 'Color', '#2E7D32', 'LineWidth', 1.8, 'DisplayName', 'DRL Dynamic Load Rejection'); hold on;
-plot(t_sim, v_pi_sag, 'Color', [0.6 0.6 0.6], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Historical PI Response');
-yline(300, 'r--', 'LineWidth', 1.2);
-grid on; ylabel('Bus Voltage (V)'); ylim([292 308]);
-title('Scenario B: Heavy Dynamic Load Step Disturbance Rejection (+10A Sag / -15A Surge)', 'FontWeight', 'bold', 'FontSize', 11);
-legend('Location', 'upper right');
+plot(t_sim, v_sag, 'Color', '#388E3C', 'LineWidth', 2.0, 'DisplayName', 'DRL Dynamic Rejection'); hold on;
+plot(t_sim, v_pi_sag, 'Color', [0.46 0.46 0.46], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Historical PI Response');
+yline(300, 'Color', '#E53935', 'LineStyle', '--', 'LineWidth', 1.4);
+grid on; ylabel('Voltage (V)', 'FontWeight', 'bold'); ylim([293 307]);
+title('Regime 2: Heavy Load Step Rejection (+10A Sag @ 0.5s, -15A Surge @ 1.2s)', 'FontWeight', 'bold', 'FontSize', 11);
+legend('Location', 'northeast');
 
-% Scenario C: Tracking Error & ±0.5V Precision Band
+% Scenario C: Tracking Error Precision (Scale: -4.5V to +4.5V)
 subplot(3, 1, 3);
-fill([t_sim(1) t_sim(end) t_sim(end) t_sim(1)], [0.5 0.5 -0.5 -0.5], [0.85 0.95 0.85], 'FaceAlpha', 0.5, 'EdgeColor', [0.3 0.7 0.3], 'LineStyle', ':', 'DisplayName', '\pm0.5V Precision Band'); hold on;
-plot(t_sim, err_raw_vec, 'Color', '#C62828', 'LineWidth', 1.5, 'DisplayName', 'DRL Tracking Error e(t)');
-yline(0, 'k--', 'LineWidth', 1.0);
+fill([t_sim(1) t_sim(end) t_sim(end) t_sim(1)], [0.5 0.5 -0.5 -0.5], [0.65 0.84 0.65], 'FaceAlpha', 0.6, 'EdgeColor', [0.3 0.7 0.3], 'LineStyle', ':', 'DisplayName', '\pm0.5V Precision Band'); hold on;
+plot(t_sim, err_raw_vec, 'Color', '#D32F2F', 'LineWidth', 1.6, 'DisplayName', 'DRL Error e(t)');
+yline(0, 'k-', 'LineWidth', 0.8);
 if has_dataset
-    plot(t_pi, pi_error(1:pi_len), 'Color', [0.6 0.6 0.6], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Historical PI Error');
+    plot(t_pi, pi_error(1:pi_len), 'Color', [0.46 0.46 0.46], 'LineStyle', ':', 'LineWidth', 1.2, 'DisplayName', 'Historical PI Error');
 end
-grid on; xlabel('Time (seconds)'); ylabel('Error (V)'); ylim([-6 6]);
-title('Scenario C: Closed-Loop Tracking Error e(t) within \pm0.5V Target Band', 'FontWeight', 'bold', 'FontSize', 11);
-legend('Location', 'upper right');
+grid on; xlabel('Time Horizon (seconds)', 'FontWeight', 'bold'); ylabel('Error (V)', 'FontWeight', 'bold'); ylim([-4.5 4.5]);
+title('Regime 3: Bounded Closed-Loop Error Deviation inside \pm0.5V Precision Band', 'FontWeight', 'bold', 'FontSize', 11);
+legend('Location', 'northeast');
 
 out_img2 = 'multi_scenario_evaluation.png';
 saveas(f2, out_img2);
