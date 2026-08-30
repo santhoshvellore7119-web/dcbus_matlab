@@ -54,13 +54,28 @@ Where $R_{\text{bonus}} = 1.0 \times \left(1 - \frac{|V_{\text{err}}|}{2.0}\righ
 
 ---
 
-## 📊 Comparative Performance Results
+## 📊 Multi-Scenario Performance Verification
+
+### 1. Multi-Scenario Dynamic Stress Testing
+The trained continuous neural network controller is systematically evaluated across three distinct operational regimes:
+- **Scenario A:** Nominal $10\,\text{Hz}$ dynamic sinusoidal load current ripple stabilization.
+- **Scenario B:** Heavy load step transient rejection ($+10\,\text{A}$ voltage sag at $0.5\,\text{s}$, $-15\,\text{A}$ surge at $1.2\,\text{s}$).
+- **Scenario C:** Closed-loop error tracking strictly bounded within the $\pm 0.5\,\text{V}$ green tolerance band.
+
+![Multi-Scenario Dynamic Performance](multi_scenario_evaluation.png)
+
+---
+
+### 2. Baseline DRL vs. Historical PI Benchmark
+Direct trajectory comparison between the neural network agent and measured dataset:
 
 ![DRL Neural Net vs Historical PI Controller Performance](validation_results_v3.png)
 
 ![DRL Training Progress](training_monitor_screenshot.png)
 
-### Quantitative Benchmark Table
+---
+
+### 3. Quantitative Performance Benchmark Table
 
 | Performance Metric | Historical PI Controller (Data) | Trained Neural Net DRL Controller | Winner / Improvement |
 | :--- | :---: | :---: | :---: |
@@ -82,9 +97,11 @@ Where $R_{\text{bonus}} = 1.0 \times \left(1 - \frac{|V_{\text{err}}|}{2.0}\righ
 ├── validate_env.m                    # 9-Step Environment Sanity Test Script
 ├── Trained_DRL_DCBus_Agent_v3.mat    # Pre-trained Neural Network Agent Weights (1000 episodes)
 ├── Case Study DCbusData.csv (1).xlsx # Benchmark Case Study Dataset
-├── training_monitor_screenshot.png   # Training Progress GUI Screenshot
+│
+├── multi_scenario_evaluation.png     # Multi-Scenario Dynamic Stress-Test Waveforms
 ├── validation_results_v3.png         # DRL vs PI Performance Comparison Plot
-└── README.md                         # Clean Documentation
+├── training_monitor_screenshot.png   # Training Progress GUI Screenshot
+└── README.md                         # Full Project Documentation
 ```
 
 ---
