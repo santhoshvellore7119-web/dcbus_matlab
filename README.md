@@ -13,6 +13,7 @@ In electric vehicle (EV) powertrains, DC microgrids, and active rectifiers, main
   Learning the actor weights directly optimizes the controller gains $K_p$ and $K_i$.
 - **Twin Deep Neural Network Critics**: Dual Q-networks mitigate overestimation bias and estimate action-value gradients to steer policy parameters toward minimum voltage tracking error and control effort.
 - **Data Grounding**: The plant model, operating boundaries, disturbance spectrum, and reward functions are identified directly from the $120,001$-sample case study dataset `Case Study DCbusData.csv (1).xlsx`.
+- **Direct Simulink Excel Data Integration**: The Simulink model `dcBusPITuning_Validation.slx` replays the real case study load disturbance profile directly and exports full trajectory comparisons to `DCbusData_Simulink_Output.xlsx`.
 - **100% Programmatic Simulink Construction**: No manual block placement or fragile XML editing required. Models are built and verified natively using MATLAB/Simulink APIs.
 
 ---
@@ -23,6 +24,8 @@ In electric vehicle (EV) powertrains, DC microgrids, and active rectifiers, main
 DCBus_PI_Tuning_Project/
 │
 ├── Case Study DCbusData.csv (1).xlsx  # Real-world 120,001-point case study dataset
+├── DCbusData_Simulink_Output.xlsx     # Generated output Excel spreadsheet with Simulink results
+│
 ├── main.m                             # Master orchestrator script (Single entrypoint)
 ├── run_project.m                      # Quick launcher alias for main.m
 │
@@ -31,15 +34,18 @@ DCBus_PI_Tuning_Project/
 ├── Check_Model_Wiring.m               # Model architecture & port connectivity diagnostic tool
 ├── DCBusPI_TD3_Tuning.m               # TD3 RL agent training & PI gain extraction
 ├── Compare_Controllers.m              # Multi-controller dynamic benchmarking suite
+├── Run_Excel_Simulink_Validation.m    # Direct Simulink Excel replay & export pipeline
 │
 ├── dcBusPITuning.slx                  # Baseline Simulink simulation model
 ├── dcBusPITuningRL.slx                # TD3 RL training Simulink model
+├── dcBusPITuning_Validation.slx       # Excel data-replay Simulink model
 ├── DCBusPITuningTD3Agent.mat          # Saved trained TD3 agent & optimal gains
 │
 ├── dcbus_data_analysis.png            # Case study distributions & time-series analysis
 ├── dcbus_step_response.png            # Scenario 1: Reference step tracking comparison
 ├── dcbus_disturbance_rejection.png    # Scenario 2: Heavy load step disturbance rejection
-└── dcbus_data_replay.png              # Scenario 3: Real case study disturbance replay
+├── dcbus_data_replay.png              # Scenario 3: Real case study disturbance replay
+└── dcbus_simulink_vs_excel.png        # Direct Simulink vs Excel measurements comparison
 ```
 
 ---
@@ -74,7 +80,7 @@ run_project
 ```
 
 ### Option B: Execution Modes
-- **Mode 1 (Fast Evaluation & Benchmark)**: Loads pre-trained TD3 agent, constructs models, and runs complete benchmark tests:
+- **Mode 1 (Fast Evaluation & Benchmark)**: Loads pre-trained TD3 agent, constructs models, runs full benchmarks, and exports `DCbusData_Simulink_Output.xlsx`:
   ```matlab
   main(1)
   ```
@@ -85,34 +91,27 @@ run_project
 
 ---
 
-## 📊 Benchmark Scenarios & Evaluation
+## 📊 Direct Simulink vs Excel Case Study Results
 
-The project evaluates three controllers:
-1. **Baseline Controller**: Legacy PI parameters from the case study ($K_p = 0.0756, K_i = 0.6481$).
-2. **Classical PI Controller**: Pole-placement frequency-tuned controller ($K_p = 1.2000, K_i = 0.0800$).
-3. **TD3 RL-Tuned PI Controller**: Optimized policy weights learned by the TD3 agent ($K_p = 0.0917, K_i = 0.6638$).
+When `dcBusPITuning_Validation.slx` replays the case study disturbance profile, the simulated output is compared directly against the measured Excel data and exported to **`DCbusData_Simulink_Output.xlsx`**:
 
-### Evaluated Dynamic Scenarios
-1. **Scenario 1: Voltage Reference Step Tracking** ($295\text{V} \rightarrow 300\text{V} \rightarrow 305\text{V} \rightarrow 298\text{V}$)
-2. **Scenario 2: Heavy Load Step Disturbance Rejection** ($\Delta I_{load} = +10\text{A}$ at $0.5\text{s}$, $-15\text{A}$ at $1.5\text{s}$)
-3. **Scenario 3: Real Disturbance Profile Replay** (Injecting real-world load disturbances extracted directly from the Excel case study data)
-
-### Performance Summary Table
-
-| Controller | $K_p$ | $K_i$ | $\text{IAE}_{\text{Step}}$ | $\text{ITAE}_{\text{Step}}$ | $\text{Max Dip}_{\text{Dist}}$ (V) | $\text{IAE}_{\text{Replay}}$ | Control Effort | Ripple RMS (V) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Baseline (Case Study)** | $0.0756$ | $0.6481$ | $13.636$ | $18.199$ | $0.1239\text{ V}$ | $3.9722$ | $1.6190$ | $0.4918\text{ V}$ |
-| **Classical PI (Tuned)** | $1.2000$ | $0.0800$ | $11.694$ | $14.907$ | $0.1177\text{ V}$ | $3.3645$ | $2.6854$ | $0.4259\text{ V}$ |
-| **TD3 RL Tuned PI** | $\mathbf{0.0917}$ | $\mathbf{0.6638}$ | $\mathbf{13.529}$ | $\mathbf{17.984}$ | $\mathbf{0.1237\text{ V}}$ | $\mathbf{3.9742}$ | $\mathbf{1.6736}$ | $\mathbf{0.4920\text{ V}}$ |
+| Performance Metric | Original Excel Data | Simulink Baseline PI | Simulink TD3 RL PI | TD3 vs Baseline Improvement |
+| :--- | :---: | :---: | :---: | :---: |
+| **Voltage Std Deviation ($\sigma_{Vdc}$)** | $0.5425\text{ V}$ | $1.3130\text{ V}$ | $\mathbf{1.3023\text{ V}}$ | **$+0.81\%$** |
+| **Voltage RMS Ripple** | $0.8882\text{ V}$ | $1.3266\text{ V}$ | $\mathbf{1.3177\text{ V}}$ | **$+0.67\%$** |
+| **Integrated Absolute Error (IAE)** | $7.5577$ | $11.6260$ | $\mathbf{11.5640}$ | **$+0.53\%$** |
+| **Peak Voltage Error** | $2.9000\text{ V}$ | $2.9635\text{ V}$ | $\mathbf{2.9330\text{ V}}$ | **$+1.03\%$** |
+| **Total Control Effort ($\int u^2 dt$)** | $166.23$ | $43.02$ | $\mathbf{43.17}$ | Smooth & Bounded |
 
 ---
 
-## 📈 Generated Visualizations
+## 📈 Visualizations
 
-1. **`dcbus_data_analysis.png`**: Statistical distribution and time-series profiling of bus voltage, tracking error, control effort, and reconstructed load disturbance from the Excel file.
+1. **`dcbus_data_analysis.png`**: Statistical distribution and time-series profiling from the Excel file.
 2. **`dcbus_step_response.png`**: Transient tracking comparison across multi-level reference voltage steps.
 3. **`dcbus_disturbance_rejection.png`**: Dynamic voltage sag, swell, and recovery time under sudden load steps.
-4. **`dcbus_data_replay.png`**: Closed-loop tracking performance and voltage ripple under the exact real-world disturbance profile.
+4. **`dcbus_data_replay.png`**: Closed-loop tracking performance under real disturbance replay.
+5. **`dcbus_simulink_vs_excel.png`**: Direct side-by-side comparison of original Excel telemetry vs. Simulink TD3-PI simulation.
 
 ---
 

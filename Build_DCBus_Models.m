@@ -1,7 +1,8 @@
 %% Build_DCBus_Models.m
 % Programmatically constructs the Simulink models for DC-Bus PI Tuning:
-%   1) dcBusPITuning.slx   - Baseline/Validation model with a standard PID block
-%   2) dcBusPITuningRL.slx - RL Training model with native 'rllib/RL Agent' block
+%   1) dcBusPITuning.slx            - Baseline/Training simulation model with PID block
+%   2) dcBusPITuningRL.slx          - RL Training model with native 'rllib/RL Agent' block
+%   3) dcBusPITuning_Validation.slx - Excel Data-Replay Simulink model with 'From Workspace' blocks
 %
 % Fully automated: 0 manual steps and 0 XML hacks.
 % Accepts plant parameters directly from Load_DCBus_Data.m or defaults.
@@ -21,8 +22,8 @@ function Build_DCBus_Models(params)
             params.uMax        = 10.0;
             params.noisePower  = 5.0;
             params.noiseSeed   = 23341;
-            params.Kp_baseline = 0.075;
-            params.Ki_baseline = 0.65;
+            params.Kp_baseline = 0.07557;
+            params.Ki_baseline = 0.64811;
         end
     end
 
@@ -121,6 +122,10 @@ function Build_DCBus_Models(params)
     % Logging & Sinks
     add_block('simulink/Sinks/To Workspace', [mdl1 '/simout'], ...
         'VariableName', 'simout', 'SaveFormat', 'Timeseries', 'Position', [650 90 730 120]);
+    add_block('simulink/Sinks/To Workspace', [mdl1 '/u_out'], ...
+        'VariableName', 'u_out', 'SaveFormat', 'Timeseries', 'Position', [420 30 500 60]);
+    add_block('simulink/Sinks/To Workspace', [mdl1 '/e_out'], ...
+        'VariableName', 'e_out', 'SaveFormat', 'Timeseries', 'Position', [240 30 320 60]);
     add_block('simulink/Sinks/To Workspace', [mdl1 '/cost'], ...
         'VariableName', 'cost', 'SaveFormat', 'Timeseries', 'Position', [650 280 730 310]);
     add_block('simulink/Sinks/Scope', [mdl1 '/Scope'], 'Position', [650 150 690 180]);
@@ -128,7 +133,9 @@ function Build_DCBus_Models(params)
     % Top Level Connections
     add_line(mdl1, 'Vdc Reference/1', 'ErrorSum/1');
     add_line(mdl1, 'ErrorSum/1', 'PID Controller/1');
+    add_line(mdl1, 'ErrorSum/1', 'e_out/1', 'autorouting', 'on');
     add_line(mdl1, 'PID Controller/1', 'DC-Bus System/1');
+    add_line(mdl1, 'PID Controller/1', 'u_out/1', 'autorouting', 'on');
     add_line(mdl1, 'Band-Limited White Noise/1', 'DC-Bus System/2');
     add_line(mdl1, 'DC-Bus System/1', 'simout/1');
     add_line(mdl1, 'DC-Bus System/1', 'Scope/1');
@@ -265,5 +272,90 @@ function Build_DCBus_Models(params)
     save_system(mdl2);
     close_system(mdl2);
     fprintf('  [OK] Built and saved: %s.slx\n', mdl2);
+
+    %% ==========================================================
+    %% MODEL 3: dcBusPITuning_Validation (Excel Data-Replay Model)
+    %% ==========================================================
+    mdl3 = 'dcBusPITuning_Validation';
+    if bdIsLoaded(mdl3)
+        close_system(mdl3, 0);
+    end
+    if isfile([mdl3 '.slx'])
+        delete([mdl3 '.slx']);
+    end
+
+    new_system(mdl3);
+    open_system(mdl3);
+
+    % Solver Configuration
+    set_param(mdl3, 'SolverType', 'Fixed-step', 'Solver', 'ode4', 'FixedStep', num2str(Ts), 'StopTime', '10.0');
+
+    % Inputs: 'From Workspace' for Reference and Injected Real Disturbance
+    add_block('simulink/Sources/From Workspace', [mdl3 '/Vref_In'], ...
+        'VariableName', 'vRef_ts', 'SampleTime', num2str(Ts), 'Interpolate', 'on', ...
+        'OutputAfterFinalValue', 'Holding final value', ...
+        'Position', [30 95 110 135]);
+
+    add_block('simulink/Sources/From Workspace', [mdl3 '/Iload_In'], ...
+        'VariableName', 'iLoad_ts', 'SampleTime', num2str(Ts), 'Interpolate', 'on', ...
+        'OutputAfterFinalValue', 'Holding final value', ...
+        'Position', [30 240 110 280]);
+
+    add_block('simulink/Math Operations/Sum', [mdl3 '/ErrorSum'], ...
+        'Inputs', '+-', 'Position', [170 95 200 135]);
+
+    % PID Controller (PI Mode) with Saturation
+    add_block('simulink/Continuous/PID Controller', [mdl3 '/PID Controller'], ...
+        'Controller', 'PI', ...
+        'P', num2str(P0), 'I', num2str(I0), 'D', '0', ...
+        'LimitOutput', 'on', ...
+        'UpperSaturationLimit', num2str(uMax), ...
+        'LowerSaturationLimit', num2str(uMin), ...
+        'AntiWindupMode', 'clamping', ...
+        'Position', [260 90 340 140]);
+
+    % DC-Bus System Subsystem
+    sub3 = [mdl3 '/DC-Bus System'];
+    add_block('built-in/SubSystem', sub3, 'Position', [440 90 560 200]);
+    add_block('simulink/Sources/In1', [sub3 '/u'], 'Position', [30 30 60 50]);
+    add_block('simulink/Sources/In1', [sub3 '/Iload'], 'Position', [30 130 60 150]);
+    add_block('simulink/Math Operations/Gain', [sub3 '/Kconv'], ...
+        'Gain', num2str(Kconv), 'Position', [110 25 150 55]);
+    add_block('simulink/Math Operations/Sum', [sub3 '/PlantSum'], ...
+        'Inputs', '+-', 'Position', [200 60 230 110]);
+    add_block('simulink/Math Operations/Gain', [sub3 '/invC'], ...
+        'Gain', num2str(1/Ceq), 'Position', [270 70 310 100]);
+    add_block('simulink/Continuous/Integrator', [sub3 '/Vdc'], ...
+        'InitialCondition', num2str(Vdc0), 'Position', [350 70 390 100]);
+    add_block('simulink/Sinks/Out1', [sub3 '/VdcOut'], 'Position', [430 75 460 95]);
+
+    add_line(sub3, 'u/1', 'Kconv/1');
+    add_line(sub3, 'Kconv/1', 'PlantSum/1');
+    add_line(sub3, 'Iload/1', 'PlantSum/2');
+    add_line(sub3, 'PlantSum/1', 'invC/1');
+    add_line(sub3, 'invC/1', 'Vdc/1');
+    add_line(sub3, 'Vdc/1', 'VdcOut/1');
+
+    % Sinks: Log all key signals
+    add_block('simulink/Sinks/To Workspace', [mdl3 '/simout'], ...
+        'VariableName', 'simout', 'SaveFormat', 'Timeseries', 'Position', [650 90 730 120]);
+    add_block('simulink/Sinks/To Workspace', [mdl3 '/u_out'], ...
+        'VariableName', 'u_out', 'SaveFormat', 'Timeseries', 'Position', [440 30 520 60]);
+    add_block('simulink/Sinks/To Workspace', [mdl3 '/e_out'], ...
+        'VariableName', 'e_out', 'SaveFormat', 'Timeseries', 'Position', [260 30 340 60]);
+
+    % Top-level wiring
+    add_line(mdl3, 'Vref_In/1', 'ErrorSum/1');
+    add_line(mdl3, 'ErrorSum/1', 'PID Controller/1');
+    add_line(mdl3, 'ErrorSum/1', 'e_out/1', 'autorouting', 'on');
+    add_line(mdl3, 'PID Controller/1', 'DC-Bus System/1');
+    add_line(mdl3, 'PID Controller/1', 'u_out/1', 'autorouting', 'on');
+    add_line(mdl3, 'Iload_In/1', 'DC-Bus System/2');
+    add_line(mdl3, 'DC-Bus System/1', 'simout/1');
+    add_line(mdl3, 'DC-Bus System/1', 'ErrorSum/2', 'autorouting', 'on');
+
+    save_system(mdl3);
+    close_system(mdl3);
+    fprintf('  [OK] Built and saved: %s.slx\n', mdl3);
     fprintf('=====================================================\n\n');
 end

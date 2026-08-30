@@ -69,8 +69,13 @@ function [metricsTable, simResults] = main(mode, numEpisodes)
     [agent, Kp_RL, Ki_RL, trainStats] = DCBusPI_TD3_Tuning(doTrain, numEpisodes, excelFile);
 
     %% STEP 5: Multi-Controller Dynamic Benchmarking & Visualization
-    fprintf('[STEP 5/5] Running Multi-Controller Dynamic Benchmarks...\n');
+    fprintf('[STEP 5/6] Running Multi-Controller Dynamic Benchmarks...\n');
     [metricsTable, simResults] = Compare_Controllers([Kp_RL, Ki_RL], excelFile, true);
+
+    %% STEP 6: Simulink Direct Excel Data Integration & Export Output Spreadsheet
+    fprintf('[STEP 6/6] Running Simulink with Real Excel Disturbance & Exporting Output Excel...\n');
+    excelOutputFile = 'DCbusData_Simulink_Output.xlsx';
+    [simExcelTable, simExcelMetrics] = Run_Excel_Simulink_Validation(excelFile, excelOutputFile, 10.0);
 
     fprintf('=========================================================================\n');
     fprintf('  PROJECT EXECUTION COMPLETED SUCCESSFULLY!\n');
@@ -80,10 +85,13 @@ function [metricsTable, simResults] = main(mode, numEpisodes)
     fprintf('  - dcbus_step_response.png        : Voltage reference step tracking comparison\n');
     fprintf('  - dcbus_disturbance_rejection.png: Heavy load step disturbance rejection comparison\n');
     fprintf('  - dcbus_data_replay.png          : Real case study disturbance replay comparison\n');
-    fprintf('Saved Models & Artifacts:\n');
+    fprintf('  - dcbus_simulink_vs_excel.png    : Simulink vs Excel original measurements comparison\n');
+    fprintf('Saved Models & Output Spreadsheets:\n');
     fprintf('  - dcBusPITuning.slx              : Baseline Simulink model\n');
     fprintf('  - dcBusPITuningRL.slx            : TD3 RL training Simulink model\n');
+    fprintf('  - dcBusPITuning_Validation.slx   : Data-replay Simulink model\n');
     fprintf('  - DCBusPITuningTD3Agent.mat      : Tuned TD3 agent & optimal gains [Kp, Ki]\n');
+    fprintf('  - DCbusData_Simulink_Output.xlsx : Output Excel spreadsheet with full Simulink results\n');
     fprintf('=========================================================================\n\n');
 end
 
