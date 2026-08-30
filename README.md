@@ -88,14 +88,16 @@ Direct trajectory comparison between the neural network agent and measured datas
 
 ---
 
-## 📂 Repository Structure
+## 📂 Repository Structure (100% Native MATLAB)
 
 ```
 ├── DCBusEnv.m                        # Custom MATLAB Reinforcement Learning Environment
-├── train_ddpg_dcbus.m                # Deep Neural Network Actor-Critic Training Script
-├── plot_results.m                    # 1-Click Validation & Comparison Waveform Generator
+├── train_td3_agent.m                 # Twin-Delayed DDPG (TD3) Agent Architecture & Training
+├── train_ddpg_dcbus.m                # Continuous DDPG Actor-Critic Training Script
+├── plot_results.m                    # 1-Click Multi-Scenario Validation & Waveform Generator
 ├── validate_env.m                    # 9-Step Environment Sanity Test Script
-├── Trained_DRL_DCBus_Agent_v3.mat    # Pre-trained Neural Network Agent Weights (1000 episodes)
+├── Trained_TD3_DCBus_Agent.mat       # Pre-trained TD3 Agent Weights (Twin Critics)
+├── Trained_DRL_DCBus_Agent_v3.mat    # Pre-trained DDPG Agent Weights
 ├── Case Study DCbusData.csv (1).xlsx # Benchmark Case Study Dataset
 │
 ├── multi_scenario_evaluation.png     # Multi-Scenario Dynamic Stress-Test Waveforms
@@ -106,20 +108,26 @@ Direct trajectory comparison between the neural network agent and measured datas
 
 ---
 
-## 🚀 How to Run & Reproduce
+## 🚀 How to Run & Reproduce (100% MATLAB)
 
-### 1. Evaluate Pre-Trained Neural Network Model (Instant 1-Click)
+### 1. Evaluate Pre-Trained Model & Multi-Scenario Waveforms (Instant 1-Click)
 In MATLAB Command Window:
 ```matlab
 plot_results
 ```
 
-### 2. Run 9-Step Environment Sanity Test
+### 2. Run 9-Step Environment Sanity Validation
 ```matlab
 validate_env
 ```
 
-### 3. Retrain Neural Network Agent from Scratch
+### 3. Inspect / Retrain TD3 Agent (Twin-Delayed DDPG)
+```matlab
+clear classes;
+train_td3_agent
+```
+
+### 4. Inspect / Retrain DDPG Agent
 ```matlab
 clear classes;
 train_ddpg_dcbus
