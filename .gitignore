@@ -1,0 +1,8 @@
+# MATLAB & Simulink temporary / generated files
+slprj/
+*.slxc
+*.asv
+*.autosave
+*~
+.DS_Store
+Thumbs.db
