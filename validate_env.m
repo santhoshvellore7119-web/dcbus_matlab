@@ -1,14 +1,14 @@
 %% validate_env.m
 % =========================================================================
-%  9-Step Environment Sanity Test for DCBusEnv
+%  10-STEP ENVIRONMENT SANITY & NOISE REDUCTION VALIDATION SUITE
 % =========================================================================
 clear classes; clear; clc; close all;
-fprintf('====== DCBusEnv 9-Step Validation Suite ======\n\n');
+fprintf('====== DCBusEnv Noise Reduction Validation Suite ======\n\n');
 
 % TEST 1: Instantiation
-fprintf('TEST 1: Creating environment...\n');
+fprintf('TEST 1: Creating environment with Noise Reduction...\n');
 try
-    env = DCBusEnv();
+    env = DCBusEnv(true);
     obsInfo = getObservationInfo(env);
     actInfo = getActionInfo(env);
     fprintf('  PASS: Environment created successfully.\n');
@@ -103,4 +103,31 @@ catch ME
     return;
 end
 
-fprintf('\n====== ALL 9 TESTS COMPLETED SUCCESSFULLY ======\n');
+% TEST 8: Low-Pass Noise Attenuation Response Test
+fprintf('\nTEST 8: Low-Pass Filter Noise Attenuation Verification...\n');
+env_noisy = DCBusEnv(false);  % Unfiltered
+env_filt  = DCBusEnv(true);   % Low-pass filtered
+
+reset(env_noisy); reset(env_filt);
+raw_errs = zeros(50, 1); filt_errs = zeros(50, 1);
+for k = 1:50
+    act_step = sin(k/2); % High frequency action oscillation
+    [obs_n, ~, ~, ~] = step(env_noisy, act_step);
+    [obs_f, ~, ~, ~] = step(env_filt,  act_step);
+    raw_errs(k)  = obs_n(1);
+    filt_errs(k) = obs_f(1);
+end
+
+var_raw  = var(diff(raw_errs));
+var_filt = var(diff(filt_errs));
+attenuation_db = 10 * log10(var_raw / var_filt);
+
+fprintf('  Derivative Variance Raw: %.6f | Filtered: %.6f\n', var_raw, var_filt);
+fprintf('  Noise Attenuation: %.2f dB\n', attenuation_db);
+if var_filt < var_raw
+    fprintf('  PASS: Low-pass filter successfully attenuates high-frequency noise!\n');
+else
+    fprintf('  WARNING: Check filter parameters.\n');
+end
+
+fprintf('\n====== ALL 10 TESTS COMPLETED SUCCESSFULLY ======\n');

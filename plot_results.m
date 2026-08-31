@@ -10,12 +10,9 @@
 clear classes;
 clear; clc; close all;
 
-fprintf('=====================================================
-');
-fprintf('  DRL DC-Bus Voltage Controller Validation & Plotting
-');
-fprintf('=====================================================
-');
+fprintf('=====================================================\n');
+fprintf('  DRL DC-Bus Voltage Controller Validation & Plotting\n');
+fprintf('=====================================================\n');
 
 % 1. Auto-discover dataset
 excelFile = 'Case Study DCbusData.csv (1).xlsx';
@@ -35,8 +32,7 @@ has_dataset = false;
 if ~isempty(excelFile) && isfile(excelFile)
     raw_data = readtable(excelFile, 'VariableNamingRule', 'preserve');
     has_dataset = true;
-    fprintf('Loaded case study dataset: %s (%d rows)
-', excelFile, height(raw_data));
+    fprintf('Loaded case study dataset: %s (%d rows)\n', excelFile, height(raw_data));
     
     idxRef    = find(contains(raw_data.Properties.VariableNames, 'reference', 'IgnoreCase', true), 1);
     idxSensed = find(contains(raw_data.Properties.VariableNames, 'sensed', 'IgnoreCase', true), 1);
@@ -65,8 +61,7 @@ if ~isfile(agentFile)
     error('Pre-trained agent file %s not found. Please run train_ddpg_dcbus.m first.', agentFile);
 end
 load(agentFile, 'agent');
-fprintf('Loaded pre-trained DRL agent from %s
-', agentFile);
+fprintf('Loaded pre-trained DRL agent from %s\n', agentFile);
 
 % 3. Instantiate Environment & Simulate
 env = DCBusEnv();

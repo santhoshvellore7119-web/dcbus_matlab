@@ -21,8 +21,7 @@ fprintf('  DC-BUS VOLTAGE REGULATOR: TD3 AGENT ARCHITECTURE & TRAINING PIPELINE 
 fprintf('=========================================================================\n\n');
 
 %% 1. Instantiate 100% MATLAB Environment
-fprintf('[1/4] Initializing MATLAB DC-Bus RL Environment (DCBusEnv)...
-');
+fprintf('[1/4] Initializing MATLAB DC-Bus RL Environment (DCBusEnv)...\n');
 env = DCBusEnv();
 obsInfo = getObservationInfo(env);
 actInfo = getActionInfo(env);
@@ -30,15 +29,11 @@ actInfo = getActionInfo(env);
 numObs = obsInfo.Dimension(1); % 3 State observations [e, de/dt, u_{t-1}]
 numAct = actInfo.Dimension(1); % 1 Continuous action u(t)
 
-fprintf('      Observation Dimension: %d continuous states
-', numObs);
-fprintf('      Action Dimension     : %d continuous action
-
-', numAct);
+fprintf('      Observation Dimension: %d continuous states\n', numObs);
+fprintf('      Action Dimension     : %d continuous action\n\n', numAct);
 
 %% 2. Construct Deep Neural Network Continuous Deterministic Actor
-fprintf('[2/4] Constructing Continuous Deterministic Actor Network (3 -> 128 -> 128 -> 1)...
-');
+fprintf('[2/4] Constructing Continuous Deterministic Actor Network (3 -> 128 -> 128 -> 1)...\n');
 actorNet = [
     featureInputLayer(numObs, 'Normalization', 'none', 'Name', 'StateIn')
     fullyConnectedLayer(128, 'Name', 'ActorFC1')
@@ -52,8 +47,7 @@ actorNet = dlnetwork(actorNet);
 actor = rlContinuousDeterministicActor(actorNet, obsInfo, actInfo);
 
 %% 3. Construct Twin Deep Q-Value Critics (Critic 1 & Critic 2)
-fprintf('[3/4] Constructing Twin Q-Value Critic Networks (Clipped Double Q-Learning)...
-');
+fprintf('[3/4] Constructing Twin Q-Value Critic Networks (Clipped Double Q-Learning)...\n');
 
 function critic = localCreateCritic(obsInfo, actInfo, cName)
     statePath = [
@@ -84,8 +78,7 @@ critic1 = localCreateCritic(obsInfo, actInfo, 'Critic1');
 critic2 = localCreateCritic(obsInfo, actInfo, 'Critic2');
 
 %% 4. Configure TD3 Hyperparameters & Training Options
-fprintf('[4/4] Configuring TD3 Agent Options & Target Policy Smoothing...
-');
+fprintf('[4/4] Configuring TD3 Agent Options & Target Policy Smoothing...\n');
 
 agentOpts = rlTD3AgentOptions(...
     'SampleTime', env.dt, ...

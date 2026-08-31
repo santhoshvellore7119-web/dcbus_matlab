@@ -6,3 +6,6 @@ slprj/
 *~
 .DS_Store
 Thumbs.db
+
+# Temporary scratch clones
+rakesh_repo/
