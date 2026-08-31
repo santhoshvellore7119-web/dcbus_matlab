@@ -11,12 +11,13 @@ A 100% native MATLAB implementation of a continuous **Twin-Delayed Deep Determin
 
 ## 📌 100% Native MATLAB Setup & Distinction Summary
 
-This repository provides **separate plot comparisons** between raw telemetry, noise-reduced telemetry, noise residual differences, and explicit performance distinctions between **Standard DDPG**, **Twin-Critic TD3**, and the **Historical PI Baseline**:
+This repository provides **5 separate plot comparisons** between raw telemetry, noise-reduced telemetry, noise residual differences, explicit performance distinctions between **Standard DDPG**, **Twin-Critic TD3**, and the **Historical PI Baseline**, as well as the **Training Reward Convergence Curve**:
 
 1. **Normal (Raw Telemetry):** Contains 18-level ADC sensor quantization chatter & PWM switching noise.
 2. **Reduced (Filtered Telemetry):** Digital low-pass filtering attenuates differentiation noise by **$8.76\,\text{dB}$** and eliminates actuator chattering.
 3. **Difference Residual ($e_{\text{diff}}$):** Explicitly plots $e_{\text{diff}}(t) = e_{\text{raw}}(t) - e_{\text{filt}}(t)$ showing noise chatter removal.
 4. **TD3 vs DDPG Distinction:** TD3 (twin critics) eliminates Q-overestimation bias, achieving **$4.50\,\text{V}$ max peak error** vs **$6.35\,\text{V}$ for standard DDPG** and **$44.00\,\text{V}$ for PI baseline**.
+5. **Training Reward Convergence:** 30-episode moving average reward convergence curve across $1,000$ episodes ($2,000,000$ total steps).
 
 ---
 
@@ -32,7 +33,7 @@ This repository provides **separate plot comparisons** between raw telemetry, no
 
 ---
 
-## 🖼️ 4 Separate High-Resolution Distinct Plots
+## 🖼️ 5 Separate High-Resolution Distinct Plots
 
 ### 1. Normal (Raw Unfiltered Telemetry Waveforms)
 ![Normal Raw Telemetry](matlab_normal_raw_plots.png)
@@ -45,6 +46,9 @@ This repository provides **separate plot comparisons** between raw telemetry, no
 
 ### 4. Controller Distinction: TD3 vs Standard DDPG vs Historical PI Baseline
 ![TD3 vs DDPG Distinction](matlab_td3_vs_ddpg_distinction.png)
+
+### 5. DDPG / TD3 Training Convergence Progress (1,000 Episodes)
+![Training Convergence Progress](matlab_training_progress.png)
 
 ---
 
@@ -64,6 +68,7 @@ c:\Users\Santhosh\Documents\antigravity\friendly-carson
 ├── matlab_reduced_filtered_plots.png    # Separate Plot 2: Reduced Filtered Telemetry
 ├── matlab_error_difference_residual.png # Separate Plot 3: Explicit Noise Residual Differential
 ├── matlab_td3_vs_ddpg_distinction.png   # Separate Plot 4: TD3 vs DDPG vs PI Distinction
+├── matlab_training_progress.png         # Separate Plot 5: Training Reward Convergence Curve
 │
 ├── .gitignore                           # Git Ignore Configuration
 └── README.md                            # Project Documentation
@@ -78,4 +83,4 @@ In the MATLAB Command Window:
 run_pipeline
 ```
 
-This single command executes the full pipeline and opens all **4 separate distinct plot windows**.
+This single command executes the full pipeline and opens all **5 separate distinct plot windows**.
