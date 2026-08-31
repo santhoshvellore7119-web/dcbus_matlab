@@ -65,7 +65,7 @@ fprintf('Loaded pre-trained DRL agent from %s\n', agentFile);
 
 % 3. Instantiate Environment & Simulate
 env = DCBusEnv();
-simOptions = rlSimulationOptions('MaxSteps', env.MaxSteps);
+simOptions = rlSimulationOptions('MaxSteps', env.MaxSteps, 'UseExplorationPolicy', false);
 experience = sim(env, agent, simOptions);
 
 % 4. Extract Simulation Results
