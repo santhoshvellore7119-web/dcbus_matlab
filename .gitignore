@@ -7,5 +7,10 @@ slprj/
 .DS_Store
 Thumbs.db
 
-# Temporary scratch clones
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Temporary execution logs
+matlab_execution_summary.txt
 rakesh_repo/
